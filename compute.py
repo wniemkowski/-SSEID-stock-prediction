@@ -38,16 +38,16 @@ def getColumnsCount(file):
 
 # po rozdzieleniu na wiele kolumn potrzebne jest podanie mu jakiego typu jest dana kolumna bo inaczej sie wydupi.
 # Po to jest ta metoda getHintColumns, jak uzywacie pliku trainDataPath to on te 3 kolumny sam sobie ogarnie
-def loadData(path):
+def loadData(path,isTest):
     columnsCount = getColumnsCount(path)
     return gl.SFrame.read_csv(path,
                                 header=True,
                                 delimiter=';',
-                                #column_type_hints = getHintColumns(columnsCount)
+                                column_type_hints = getHintColumns(columnsCount, isTest)
                               )
 
 def compute():
-    usage_data = loadData(trainDataPath)
+    usage_data = loadData(splittedTrainData, False)
 
     model = gl.random_forest_classifier.create(usage_data, target=  'Decision',
                                                        max_iterations= 15,
@@ -55,13 +55,13 @@ def compute():
                                                        validation_set=None,
                                                        #class_weights= {'Buy': 50, 'Hold': 7, 'Sell': 7},
                                                )
-    usage_data = loadData(testDataPath)
+    usage_data = loadData(splittedTestData, True)
 
     r = model.classify(usage_data)
     saveOutput(r)
 
 def computeWithPerformanceTest():
-    usage_data = loadData(trainDataPath)
+    usage_data = loadData(splittedTrainData, False)
     train_data, test_data = usage_data.random_split(0.8)
 
     model = gl.random_forest_classifier.create(train_data, target=  'Decision',
@@ -75,7 +75,7 @@ def computeWithPerformanceTest():
     results = model.evaluate(test_data)
     print results
 
-    usage_data = loadData(testDataPath)
+    usage_data = loadData(splittedTestData, True)
     r = model.classify(usage_data)
     saveOutput(r)
 
@@ -84,6 +84,6 @@ def computeWithPerformanceTest():
 # csvParser.parseToFile(testDataPath,splittedTestData,True)
 
 # uczenie na penym zbiorze danach
-compute()
+#compute()
 # uczenie na 80% + 20% jako dane testowe i wyrzuca w konsoli wyniki
-# computeWithPerformanceTest()
+computeWithPerformanceTest()
